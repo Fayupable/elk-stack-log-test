@@ -24,9 +24,7 @@ monitoring.
 
 ## Configuration
 
-Here's the updated section with a note about configuring different databases:
 
-```markdown
 ### Environment Variables
 
 The following environment variables should be placed in a `.env` file in the project root:
