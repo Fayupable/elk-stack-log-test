@@ -1,0 +1,51 @@
+spring:
+  application:
+    name: elk-stack
+
+  datasource:
+    url: ${MYSQL_URL}
+    username: ${MYSQL_USER}
+    password: ${MYSQL_PASSWORD}
+  jpa:
+    hibernate:
+      ddl-auto: update
+      properties:
+        hibernate:
+          format_sql: true
+          dialect: org.hibernate.dialect.MySQL5Dialect
+    show-sql: true
+
+  main:
+    banner-mode: off
+
+logging:
+  level:
+    root: info
+    com.fayupable.elkstack: info
+    org.springframework: warn
+    org.hibernate: warn
+  pattern:
+    level: "%5p [${spring.application.name},%X{traceId:-},%X{spanId:-}]"
+  file:
+    name: logs/application.log
+  logback:
+    rollingpolicy:
+      max-file-size: 10MB
+      max-history: 7
+
+api:
+  prefix: /api/elk-stack/v1
+
+auth:
+  token:
+    jwtSecret: ${JWT_SECRET}
+    expirationInMils: ${JWT_EXPIRATION_MS}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,metrics,loggers
+  metrics:
+    tags:
+      application: ${spring.application.name}

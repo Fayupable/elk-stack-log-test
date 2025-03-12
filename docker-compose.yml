@@ -1,0 +1,60 @@
+services:
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.11.1
+    container_name: elasticsearch
+    environment:
+      - node.name=elasticsearch
+      - discovery.type=single-node
+      - bootstrap.memory_lock=false
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m -Dlog4j2.formatMsgNoLookups=true"
+      - xpack.security.enabled=false # Disable security features
+      - ELASTIC_PASSWORD=changeme # Default password for Elasticsearch
+      - cluster.name=elk-cluster
+      - network.host=0.0.0.0
+      - DISABLE_INSTALL_DEMO_CONFIG=true
+    volumes:
+      - elasticsearch-data:/usr/share/elasticsearch/data
+    ports:
+      - "9200:9200"
+    networks:
+      - elk-network
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:9200/_cat/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  logstash:
+    image: docker.elastic.co/logstash/logstash:8.11.1
+    container_name: logstash
+    environment:
+      - "LS_JAVA_OPTS=-Xmx256m -Xms256m -Dls.cgroup.cpuacct.path.override=/ -Dls.cgroup.cpu.path.override=/"
+    volumes:
+      - ./logstash.conf:/usr/share/logstash/pipeline/logstash.conf:ro
+    ports:
+      - "5001:5001"
+    depends_on:
+      elasticsearch:
+        condition: service_healthy
+    networks:
+      - elk-network
+
+  kibana:
+    image: docker.elastic.co/kibana/kibana:8.11.1
+    container_name: kibana
+    environment:
+      - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
+    ports:
+      - "5601:5601"
+    depends_on:
+      - elasticsearch
+    networks:
+      - elk-network
+
+networks:
+  elk-network:
+    driver: bridge
+
+volumes:
+  elasticsearch-data:
+    driver: local
